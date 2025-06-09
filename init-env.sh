@@ -18,6 +18,7 @@ initialise_r() {
     fi
     Rscript -e 'renv::init(bare = FALSE)'
     Rscript -e 'renv::install(c("rmarkdown", "languageserver", "nx10/httpgd@v2.0.3", "prompt", "lintr", "cli"))'
+    Rscript -e 'renv::install(c("ggplot2"))'
     Rscript -e 'renv::snapshot(type = "all")'
   fi
 }
