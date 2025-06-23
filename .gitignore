@@ -8,3 +8,4 @@ staging/
 renv/library/
 renv/python/
 renv/stating/
+.venv/

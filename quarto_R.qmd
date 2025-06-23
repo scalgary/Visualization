@@ -13,17 +13,31 @@ For a demonstration of a line plot on a polar axis, see @fig-polar.
 #| label: fig-polar
 #| fig-cap: "A line plot on a polar axis"
 
-import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
-r = np.arange(0, 2, 0.01)
-theta = 2 * np.pi * r
-fig, ax = plt.subplots(
-  subplot_kw = {'projection': 'polar'} 
-)
-ax.plot(theta, r)
-ax.set_rticks([0.5, 1, 1.5, 2])
-ax.grid(True)
+
+# dataset 1
+
+# dataset 1
+url1 = "https://raw.githubusercontent.com/JosephBARBIERDARNAL/data-matplotlib-journey/main/storms/storms.csv"
+import matplotlib.pyplot as plt
+import pandas as pd
+from pyodide.http import open_url
+
+
+# dataset 2
+url2 = "https://raw.githubusercontent.com/JosephBARBIERDARNAL/data-matplotlib-journey/refs/heads/main/footprint/footprint.csv"
+
+
+# dataset 3
+url3= "https://raw.githubusercontent.com/JosephBARBIERDARNAL/data-matplotlib-journey/refs/heads/main/mariokart/mariokart.csv"
+
+
+fig, ax = plt.subplots()
+ax.scatter(df_footprint["footprint"], df_footprint["biocapacity"])
 plt.show()
+df = pd.read_csv(url)
+
 ```
 
