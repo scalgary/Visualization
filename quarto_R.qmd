@@ -15,7 +15,7 @@ For a demonstration of a line plot on a polar axis, see @fig-polar.
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import json
 
 # dataset 1
 
@@ -23,7 +23,7 @@ import pandas as pd
 url1 = "https://raw.githubusercontent.com/JosephBARBIERDARNAL/data-matplotlib-journey/main/storms/storms.csv"
 import matplotlib.pyplot as plt
 import pandas as pd
-from pyodide.http import open_url
+
 
 
 # dataset 2
@@ -33,11 +33,109 @@ url2 = "https://raw.githubusercontent.com/JosephBARBIERDARNAL/data-matplotlib-jo
 # dataset 3
 url3= "https://raw.githubusercontent.com/JosephBARBIERDARNAL/data-matplotlib-journey/refs/heads/main/mariokart/mariokart.csv"
 
+df_storms = pd.read_csv(url1)
+df_footprint = pd.read_csv(url2)
+df_marioKart = pd.read_csv(url3)
 
-fig, ax = plt.subplots()
-ax.scatter(df_footprint["footprint"], df_footprint["biocapacity"])
-plt.show()
-df = pd.read_csv(url)
+
+
 
 ```
 
+## Visualisation Stroms data
+## line plot
+
+
+
+
+
+```{python}
+import matplotlib.pyplot as plt
+
+# Supposons que df_storms existe déjà
+
+total_year = df_storms.groupby('year')["n"].sum()
+grouped = df_storms.groupby("status")
+df_storms_max = df_storms.sort_values(['status', 'n'], ascending=[True, False]) \
+           .drop_duplicates(subset='status') \
+           [['status', 'year', 'n']]
+fig, ax = plt.subplots()
+
+params = {
+    "title": "Annual numbers of storms by status",
+    "xlabel": "Year",
+    "ylabel": "Number of storms",
+    "xlim": [2010, 2022], 
+    #"ylim": [0,400],
+    "spines": {
+        "top": False,
+        "right": False
+    },
+    "ticks": {
+        "top": False,
+        "right": False
+    },
+    "legend": {
+        "loc": "upper left",
+        "frameon": False
+    }
+}
+
+lines = []
+nudge_y = [5,-8,5,5]
+nudge_x = [0,0,0,0]
+# Tracer les groupes
+for i, (status, df_grouped) in enumerate(grouped):
+    df_value = df_grouped.sort_values(["n"], ascending=[False]).head(1)
+    line, = ax.plot(df_grouped["year"], df_grouped["n"], label=status.capitalize())
+    lines.append(line)  # stocker l'objet Line2D
+    ax.text(df_value["year"].iloc[0] + nudge_x[i],df_value["n"].iloc[0] + nudge_y[i], f"{int(df_value.iloc[0]["n"])}", color = line.get_color())
+
+# Handlers pour appliquer les paramètres
+handlers = {
+    "title":   {"func": ax.set_title,  "kind": "single"},
+    "xlabel":  {"func": ax.set_xlabel, "kind": "single"},
+    "ylabel":  {"func": ax.set_ylabel, "kind": "single"},
+    "xlim":    {"func": ax.set_xlim,   "kind": "args"},
+    "ylim":    {"func": ax.set_ylim,   "kind": "args"},
+    "legend":  {"func": ax.legend,     "kind": "kwargs"},
+    "ticks":   {"func": ax.tick_params,"kind": "kwargs"}
+}
+
+legend = None  # pour pouvoir accéder à l’objet ensuite si nécessaire
+
+for key, conf in handlers.items():
+    if key in params:
+        value = params[key]
+        kind = conf["kind"]
+        func = conf["func"]
+        
+        if kind == "single":
+            func(value)
+        elif kind == "args":
+            func(*value)
+        elif kind == "kwargs":
+            result = func(**value)
+            if key == "legend":
+                legend = result  # capturer l'objet Legend
+
+# Gérer les spines
+for spine, visible in params.get("spines", {}).items():
+    ax.spines[spine].set_visible(visible)
+
+# Couleur du texte = couleur de la ligne
+# Appliquer la couleur de la courbe au texte de la légende
+for text, line in zip(legend.get_texts(), lines):
+    text.set_color(line.get_color())
+
+ymin, _ = ax.get_ylim()  # récupérer le min actuel
+ax.set_ylim(ymin, 400)
+
+
+plt.show()
+```
+
+
+```{python}
+
+```
