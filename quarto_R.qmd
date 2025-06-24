@@ -135,7 +135,66 @@ ax.set_ylim(ymin, 400)
 plt.show()
 ```
 
-
+je veux boxplot des lifexp par region
 ```{python}
+df_clean = df_footprint.dropna(subset=["lifexp"])
+region_means = df_clean.groupby("region")["lifexp"].mean()
+regions_sorted = region_means.sort_values().index.tolist()
 
+values = [df_clean[df_clean["region"] == region]["lifexp"] for region in regions_sorted]
+fig, ax = plt.subplots()
+params = {
+    "title": "Life Esperance by region",
+    "xlabel": "Years",
+    "spines": {
+        "top": False,
+        "right": False,
+        "left":False
+    },
+    "ticks": {
+        "top": False,
+        "right": False,
+        "left":False
+    }
+}
+
+
+# Handlers pour appliquer les paramètres
+handlers = {
+    "title":   {"func": ax.set_title,  "kind": "single"},
+    "xlabel":  {"func": ax.set_xlabel, "kind": "single"},
+    "ylabel":  {"func": ax.set_ylabel, "kind": "single"},
+    "xlim":    {"func": ax.set_xlim,   "kind": "args"},
+    "ylim":    {"func": ax.set_ylim,   "kind": "args"},
+    "legend":  {"func": ax.legend,     "kind": "kwargs"},
+    "ticks":   {"func": ax.tick_params,"kind": "kwargs"}
+}
+
+legend = None  # pour pouvoir accéder à l’objet ensuite si nécessaire
+
+for key, conf in handlers.items():
+    if key in params:
+        value = params[key]
+        kind = conf["kind"]
+        func = conf["func"]
+        
+        if kind == "single":
+            func(value)
+        elif kind == "args":
+            func(*value)
+        elif kind == "kwargs":
+            result = func(**value)
+            if key == "legend":
+                legend = result  # capturer l'objet Legend
+
+# Gérer les spines
+for spine, visible in params.get("spines", {}).items():
+    ax.spines[spine].set_visible(visible)
+
+
+
+
+
+ax.boxplot(values, labels = regions_sorted, vert = False)
+plt.show()
 ```
