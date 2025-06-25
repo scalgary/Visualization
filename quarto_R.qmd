@@ -260,6 +260,7 @@ sns.lineplot(
 plt.show()
 ```
 
+![Elephant](chart_to_replicate.png)
 
 ```{python}
 import matplotlib.pyplot as plt
@@ -275,11 +276,194 @@ x = df["Year"]
 y = np.stack(df[columns].values, axis=-1)
 
 fig, ax = plt.subplots(figsize=(10, 5))
+
 #stacked lineplot
 
-ax.stackplot(x, y, labels=x)
-ax.spines[spine].set_visible(visible)
+ax.stackplot(x, y, labels=columns)
+ax2 = ax.twinx()
+ax.spines[["top", "left"]].set_visible(False)
+ax2.spines[["top", "left"]].set_visible(False)
 
+ax.set_xlim(1960, 2023)
+
+ax.tick_params(
+    axis='y',
+    length=0,
+    labelright=False # enlève les labels à droite
+)
+ax.set_title("Evolution of natural disasters", loc='left')
+ax.set_yticklabels([])
+ax2.set_ylim(ax.get_ylim())
+ax.legend(loc="upper left", frameon=False)
 plt.show()
 # Here goes your code
+```
+
+
+```{python}
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+from pypalettes import load_cmap
+
+
+
+columns = df.drop(columns="Year").sum().sort_values().index.to_list()
+x = df["Year"]
+y = np.stack(df[columns].values, axis=-1)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+colors = load_cmap("Antique").colors
+
+ax.stackplot(x, y, colors=colors, labels=columns)
+ax.set_xlim(1960, 2023)
+ax.spines[["top", "left"]].set_visible(False)
+ax.yaxis.tick_right()
+ax.text(
+   x=1960,
+   y=380,
+   s="Evolution of natural disasters\nbetween 1960 and 2023",
+   size=15,
+)
+ax.text(x=1960, y=355, s="Data source: EM-DAT")
+ax.legend(reverse=True, loc="center left")
+ax.set_xticks([1960, 1980, 2000, 2020])
+ax.set_yticks([100, 200, 300, 400])
+ax.tick_params(length=0, pad=5)
+ax.legend(frameon=False)
+plt.show()
+```
+
+
+```{python}
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+from pypalettes import load_cmap
+
+url5 = "https://raw.githubusercontent.com/JosephBARBIERDARNAL/data-matplotlib-journey/refs/heads/main/newyork-airbnb/newyork-airbnb.csv"
+df = pd.read_csv(url5)
+
+df_agg = (
+    df["neighbourhood"]
+    .value_counts()
+    .head(10)
+    .to_frame(name="count")
+    .reset_index()
+    .rename(columns={"index": "neighbourhood"})
+    .sort_values("count")
+)
+labels = df_agg["neighbourhood"]
+values = df_agg["count"]
+color_mapping = {True: "#2d8653", False: "#d6d6d6"}
+colors = (labels == "Williamsburg").map(color_mapping)
+
+fig, ax = plt.subplots(layout="tight")
+ax.barh(labels, values, color = colors)
+ax.spines[["top", "left", "bottom", "right"]].set_visible(False)
+ax.tick_params(length=0)
+ax.set_xticklabels([])
+
+ax.text(
+   x=3920 / 2,
+   y=10.5,
+   s="New York neighbourhood with the most Airbnbs",
+   ha="center",
+   va="top",
+   size=14,
+)
+for i in range(len(values)):
+   value = values[i]
+   if i == 0:
+      color = "white"
+   else:
+      color = "black"
+   format_value = f"{value / 1000:.1f}k"
+   ax.text(
+      x=value - 350, y=len(values) - 1 - i, s=format_value, va="center", color=color
+   )
+plt.show()
+# Here goes your code...
+```
+
+```{python}
+import matplotlib.pyplot as plt
+import pandas as pd
+
+
+url6 = "https://raw.githubusercontent.com/JosephBARBIERDARNAL/data-matplotlib-journey/refs/heads/main/newyork-airbnb/newyork-airbnb.csv"
+df = pd.read_csv(url6)
+
+avg_global = df["price"].mean()
+
+df_agg = (
+  df.groupby("neighbourhood_group", as_index=False)["price"]
+  .mean()
+  .sort_values("price")
+  .reset_index()
+)
+
+x = df_agg["price"]
+y = df_agg["neighbourhood_group"]
+
+fig, ax = plt.subplots(layout="tight")
+ax.stem(y, x, orientation="horizontal", basefmt="green")
+ax.set_xticks(list(range(0, 201, 20)))
+
+ax.text(
+  x=0,
+  y=4.5,
+  s="Average price per neighbourhood in New York Airbnbs",
+  size=12,
+)
+ax.text(x=152 -10, y=3.5, s=f"Overall average: ${avg_global:.2f}")
+ax.spines[["top", "left", "bottom", "right"]].set_visible(False)
+ax.tick_params(length=0, pad=5)
+ax.set_xticklabels([])
+for i in range(len(y)):
+   value = x[i]
+
+   if i == 4:
+      color = "blue"
+   else:
+      color = "black"
+   format_value = f"${value:.2f}"
+   ax.text(
+      x=x[i] + 10, y=y[i], s=format_value, va="center", color=color
+   )
+plt.show()
+```
+
+```{python}
+for i in range(len(y)):
+   value = x[i]
+
+   if i == 0:
+      color = "blue"
+   else:
+      color = "black"
+   format_value = f"${value:.2f}"
+   ax.text(
+      x=x[i], y=y[i], s=format_value, va="center", color=color
+   )
+```
+```{python}
+
+
+
+
+for i in range(len(neighbourhood_group)):
+   value = x[i]
+   if i == 0:
+      color = "white"
+   else:
+      color = "black"
+   format_value = f"{value / 1000:.1f}k"
+   ax.text(
+      x=value - 350, y=len(values) - 1 - i, s=format_value, va="center", color=color
+   )
+plt.show()
 ```
