@@ -38,7 +38,9 @@ df_footprint = pd.read_csv(url2)
 df_marioKart = pd.read_csv(url3)
 
 
-
+url4 = "https://raw.githubusercontent.com/JosephBARBIERDARNAL/data-matplotlib-journey/refs/heads/main/natural-disasters/natural-disasters.csv"
+df_desasters = pd.read_csv(url4)
+print(plt.rcParams.keys())
 
 ```
 
@@ -90,6 +92,7 @@ for i, (status, df_grouped) in enumerate(grouped):
     line, = ax.plot(df_grouped["year"], df_grouped["n"], label=status.capitalize())
     lines.append(line)  # stocker l'objet Line2D
     ax.text(df_value["year"].iloc[0] + nudge_x[i],df_value["n"].iloc[0] + nudge_y[i], f"{int(df_value.iloc[0]["n"])}", color = line.get_color())
+    
 
 # Handlers pour appliquer les paramètres
 handlers = {
@@ -130,8 +133,9 @@ for text, line in zip(legend.get_texts(), lines):
 
 ymin, _ = ax.get_ylim()  # récupérer le min actuel
 ax.set_ylim(ymin, 400)
-
-
+ax.set_xticks(list(range(2010, 2023))) 
+#plt.xticks(rotation=90)  # ou 90 si besoin
+ax.tick_params(axis='x', labelsize=8)
 plt.show()
 ```
 
@@ -197,4 +201,85 @@ for spine, visible in params.get("spines", {}).items():
 
 ax.boxplot(values, labels = regions_sorted, vert = False)
 plt.show()
+```
+
+import matplotlib.colors as mcolors
+
+hsv_color = (0.01, .4, .8)
+rgb_color = mcolors.hsv_to_rgb(hsv_color)
+
+from pypalettes import load_cmap
+
+
+```{python}
+import pandas as pd
+
+import matplotlib.pyplot as plt
+
+
+pivot_df = df_storms.pivot_table(
+  index="year",  # year is now the index
+  columns="status",  # column are the kind of storm
+  values="n",  # df content is taken from the 'n' column
+)
+
+fig, ax = plt.subplots()
+
+for status in pivot_df["status"].unique():
+  if status == "tropical storm":
+      color = "#b75050"
+  else:
+      color = "lightgrey"
+  ax.plot(pivot_df.index, pivot_df[status], color=color)
+
+plt.show()
+```
+
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pypalettes import load_cmap
+
+
+
+
+x = df_storms["year"]
+y = df_storms["n"]
+c = df_storms["status"]
+
+cmap = load_cmap("Acadia")
+
+fig, ax = plt.subplots()
+sns.lineplot(
+  x=x, y=y, hue=c,
+  palette=cmap.colors,
+  ax=ax
+)
+plt.show()
+```
+
+
+```{python}
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+from pypalettes import load_cmap
+
+df = df_desasters.copy()
+
+columns = df.drop(columns="Year").sum().sort_values().index.to_list()
+x = df["Year"]
+y = np.stack(df[columns].values, axis=-1)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+#stacked lineplot
+
+ax.stackplot(x, y, labels=x)
+ax.spines[spine].set_visible(visible)
+
+plt.show()
+# Here goes your code
 ```
