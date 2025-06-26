@@ -245,9 +245,10 @@ from pypalettes import load_cmap
 
 
 
-x = df_storms["year"]
+x = df_storms["year"].astype(int)
 y = df_storms["n"]
 c = df_storms["status"]
+df_sum = df_storms.groupby("year", as_index=False)[["n"]].sum()
 
 cmap = load_cmap("Acadia")
 
@@ -262,6 +263,58 @@ plt.show()
 
 ![Elephant](chart_to_replicate.png)
 
+
+```{python}
+import matplotlib.pyplot as plt
+
+    # Example using a list of lists
+mosaic = [['A', 'A'],['A', 'A'],
+              ['C', 'C'],
+              ['C','C'],['C','C'],
+              ['C','C']]
+
+    # Example using string shorthand
+    # mosaic = "AAB;CDB"
+colors = ["green", "blue","orange","red"]
+fig, axs = plt.subplot_mosaic(mosaic,sharex=True)
+sns.lineplot(
+  x=x, y=y, hue=c,
+  palette=colors,
+  ax=axs['C']
+)
+axs['C'].legend().remove()
+bars = axs["A"].bar(df_sum["year"].astype(int),df_sum["n"])
+axs["C"].spines[["top", "right"]].set_visible(False)
+axs["A"].spines[["top", "right","left","bottom"]].set_visible(False)
+axs["A"].set_yticklabels([])
+#axs["A"].set_xticklabels([])
+axs['A'].tick_params(
+    axis='both',
+    length=0,
+    labelright=False # enlève les labels à droite
+)
+
+for i, bar in enumerate(bars):
+    height = bar.get_height()
+    axs["A"].text(
+        bar.get_x() + bar.get_width() / 2,  # centre de la barre
+        height - (height * 0.1),                         # position au milieu de la 
+        f'{int(height)}',                   # texte à afficher
+        ha='center',
+        va='top',                        # centre vertical
+        color='white',                      # lisible si fond sombre
+        fontsize=10
+    )
+axs['C'].text(2012,300,c[2].capitalize(),color =colors[2])
+axs['C'].text(2010,165,c[0].capitalize(),color =colors[0])
+axs['C'].text(2016,25,c[3].capitalize(),color =colors[3])
+axs['C'].text(2010,80,c[1].capitalize(),color =colors[1])
+axs['A'].text(2015,650,"Total by Year", color="blue")
+axs['C'].text(2015,340,"Total by Year")
+fig.subplots_adjust(wspace=.1, hspace=.1)
+fig.text(0.05,0.9,"Annual Storms")
+plt.show()
+```
 ```{python}
 import matplotlib.pyplot as plt
 import pandas as pd
