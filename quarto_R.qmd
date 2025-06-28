@@ -14,6 +14,7 @@ For a demonstration of a line plot on a polar axis, see @fig-polar.
 #| fig-cap: "A line plot on a polar axis"
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 import pandas as pd
 import json
 
@@ -275,19 +276,29 @@ mosaic = [['A', 'A'],['A', 'A'],
 
     # Example using string shorthand
     # mosaic = "AAB;CDB"
-colors = ["green", "blue","orange","red"]
+colors_C = ["blue", "black","orange","grey"]
 fig, axs = plt.subplot_mosaic(mosaic,sharex=True)
 sns.lineplot(
   x=x, y=y, hue=c,
-  palette=colors,
+  palette=colors_C,
   ax=axs['C']
 )
+min_val = df_sum["n"].min()
+max_val = df_sum["n"].max()
+
+colors = [
+    "green" if val == min_val else 
+    "red" if val == max_val else 
+    "lightgrey" 
+    for val in df_sum["n"]
+]
 axs['C'].legend().remove()
-bars = axs["A"].bar(df_sum["year"].astype(int),df_sum["n"])
-axs["C"].spines[["top", "right"]].set_visible(False)
+bars = axs["A"].bar(df_sum["year"].astype(int),df_sum["n"], 
+color=colors)
+axs["C"].spines[["top", "left","bottom"]].set_visible(False)
 axs["A"].spines[["top", "right","left","bottom"]].set_visible(False)
 axs["A"].set_yticklabels([])
-#axs["A"].set_xticklabels([])
+
 axs['A'].tick_params(
     axis='both',
     length=0,
@@ -303,16 +314,31 @@ for i, bar in enumerate(bars):
         ha='center',
         va='top',                        # centre vertical
         color='white',                      # lisible si fond sombre
-        fontsize=10
+        fontsize=9
     )
-axs['C'].text(2012,300,c[2].capitalize(),color =colors[2])
-axs['C'].text(2017,220,c[0].capitalize(),color =colors[0])
-axs['C'].text(2016,25,c[3].capitalize(),color =colors[3])
-axs['C'].text(2010,80,c[1].capitalize(),color =colors[1])
-axs['A'].text(2009,630,"Total by Year", color="blue")
-axs['C'].text(2009,340,"Total by Year")
+axs['C'].text(2012,290,c[2].capitalize(),color =colors_C[2])
+axs['C'].text(2017,220,c[0].capitalize(),color =colors_C[0])
+axs['C'].text(2016,25,c[3].capitalize(),color =colors_C[3])
+axs['C'].text(2010,80,c[1].capitalize(),color =colors_C[1])
+axs['A'].text(2009,610,"Storms Totals", style='italic',fontfamily='serif')
+axs['C'].text(2009,335,"Storms Trends by Type", style='italic',fontfamily='serif')
+axs['C'].yaxis.tick_right()
+axs['C'].set_xlim(2009, 2023)
+axs['C'].set_ylim(0, 360)
+axs['C'].set_xlabel('')
+axs['C'].set_ylabel('')
+axs['C'].spines['right'].set_position(('data', 2022))
+axs['C'].set_yticks([50,100,150,200,250,300,350])
 fig.subplots_adjust(wspace=.1, hspace=.1)
-fig.text(0.05,0.9,"Annual Storms")
+fig.text(0.05,0.95,"Storm Types Over Time 2010-2022",fontfamily='serif')
+
+for label in axs["C"].get_xticklabels():
+    if label.get_text() == "2014":
+        label.set_color("green")
+    elif label.get_text() == "2020":
+        label.set_color("red")   
+    else:
+        label.set_color("black")  # optionnel : couleur par défaut
 plt.show()
 ```
 ```{python}
