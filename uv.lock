@@ -1203,6 +1203,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pyfonts"
+version = "1.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d6/df/753b979449a374258c2ee91cc7cf0bd1172f2685b69b0806eed6d2aece4a/pyfonts-1.1.1.tar.gz", hash = "sha256:c0528f334fdca273a977466eeb3e1a4316e1b25e8175189d2c39452094d5ee46", size = 189039, upload-time = "2025-07-19T08:05:54.875Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/00/2fde255434004eec687d3ba17ec476f2c064e013cc341e26f48e1c2b0ce2/pyfonts-1.1.1-py3-none-any.whl", hash = "sha256:95775a4e1c362b7bf4a9f871e3a6c59d31e2e96ea89aec8e57497a0fdc6738ca", size = 8810, upload-time = "2025-07-19T08:05:52.144Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1616,6 +1629,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "papermill" },
+    { name = "pyfonts" },
     { name = "pypalettes" },
     { name = "seaborn" },
 ]
@@ -1627,6 +1641,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.3.1" },
     { name = "pandas", specifier = ">=2.3.0" },
     { name = "papermill", specifier = ">=2.6.0" },
+    { name = "pyfonts", specifier = ">=1.1.1" },
     { name = "pypalettes", specifier = ">=0.1.5" },
     { name = "seaborn", specifier = ">=0.13.2" },
 ]
