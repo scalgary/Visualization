@@ -1,0 +1,298 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{python}
+import os
+os.listdir()
+```
+
+```{python}
+import pandas as pd
+df_raw = pd.read_csv('peggy/data/raw_peggy_DONNEES_ILP.csv')
+
+# Afficher les premières lignes pour vérifier
+df_raw.head()
+df_raw.shape
+```
+
+# remove empty lines
+```{python}
+df_raw = df_raw.dropna(how='all')
+df_raw.shape
+```
+
+# gere months
+```{python}
+df_raw['Année'].value_counts(dropna=False)
+df_raw = df_raw.copy()
+
+# Maintenant vous pouvez modifier sans warning
+df_raw['Année'] = df_raw['Année'].astype(int)
+col = 'Mois'
+df_raw[col].value_counts(dropna=False)
+
+# Dictionnaire de mapping pour tous les mois
+mois_mapping = {
+    'JANVIER': '01-Janvier',
+    'FÉVRIER': '02-Février',
+    'MARS': '03-Mars',
+    'AVRIL': '04-Avril',
+    'MAI': '05-Mai',
+    'JUIN': '06-Juin',
+    'JUILLET': '07-Juillet',
+    'AOUT': '08-Août',
+    'SEPTEMBRE': '09-Septembre',
+    'OCTOBRE': '10-Octobre',
+    'NOVEMBRE': '11-Novembre',
+    'DECEMBRE': '12-Décembre',
+    '11-Nov': '11-Novembre',
+    '10-Oct': '10-Octobre',
+    '12-Dec': '12-Décembre'
+}
+
+# Appliquer le mapping
+
+df_raw['Mois'] = df_raw['Mois'].str.strip().replace(mois_mapping)
+col = 'Mois'
+df_raw[col].value_counts(dropna=False)
+```
+
+
+# drop some columns
+```{python}
+df_raw.drop(['Nom','Prénom','Demande','Unnamed: 3','SELAS'], axis=1, inplace=True)
+```
+
+# 3 types de variables
+keep_float -> easy one no issue
+keep_easy_clean -> few values just remove <
+```{python}
+keep_float = ['Ferritine (µg/L)','LBP (µg/mL)','Vitamine D (ng/mL)']
+keep_easy_clean = ['Homocystéine (µmol/L)','TSH (mUI/L)']
+```
+
+
+ # examen 
+
+```{python}
+
+for col in keep_easy_clean:
+    a = df_raw.filter([col])
+    col_data = pd.to_numeric(df_raw[col], errors='coerce')
+    print(col_data.min())
+    print(col_data.max())
+    print(col_data.count())
+```
+ 
+
+
+
+```{python}
+def voir_valeurs_problematiques(df, nom_colonne):
+    """Voir quelles valeurs spécifiques ne peuvent pas être converties avec leur nombre d'occurrences"""
+    original = df[nom_colonne].dropna()
+    converti = pd.to_numeric(df[nom_colonne], errors='coerce')
+
+    # Identifier les index où la conversion a échoué
+    mask_echec = converti.isna() & original.notna()
+    valeurs_problematiques = df.loc[mask_echec, nom_colonne]
+
+    # Compter les occurrences de chaque valeur problématique
+    counts_problematiques = valeurs_problematiques.value_counts()
+
+    print(f"Valeurs non-convertibles dans '{nom_colonne}' avec leurs occurrences:")
+    print(counts_problematiques)
+    print(f"Nombre total d'occurrences: {counts_problematiques.sum()} {valeurs_problematiques.unique()}")
+    print(f"Nombre de valeurs uniques problématiques: {len(counts_problematiques)}")
+
+    return counts_problematiques
+```
+
+
+```{python}
+voir_valeurs_problematiques(df_raw,'Homocystéine (µmol/L)')
+voir_valeurs_problematiques(df_raw,'TSH (mUI/L)')
+
+```
+
+
+```{python}
+keep_float = ['Ferritine (µg/L)','LBP (µg/mL)','Vitamine D (ng/mL)']
+keep_easy_clean = ['Homocystéine (µmol/L)','TSH (mUI/L)']
+
+df = df_raw.copy()
+for col in keep_easy_clean:
+  df[col] = df[col].str.replace(',','.')
+  df[col] = df[col].str.replace('<','')
+  df[col] = pd.to_numeric(df[col], errors='coerce')
+
+for col in keep_easy_clean + keep_float:
+  a = df.filter([col])
+  col_data = pd.to_numeric(df[col], errors='coerce')
+  print(col_data.min())
+  print(col_data.max())
+  print(col_data.count())
+
+```
+
+3 - Ac anti-LDL oxydés (U/L)
+4 - Homa
+5 - PCR-US (mg/L)
+
+
+```{python}
+col = 'Homa'
+voir_valeurs_problematiques(df,col)
+df[col] = pd.to_numeric(df[col], errors='coerce')
+
+df[col].value_counts(dropna=False)
+df = df.dropna(subset = [col])
+df.shape
+```
+
+
+
+```{python}
+col = 'Ac anti-LDL oxydés (U/L)'
+voir_valeurs_problematiques(df,col)
+
+```
+
+'Ac anti-LDL oxydés (U/L)'
+```{python}
+import numpy as np
+col = 'Ac anti-LDL oxydés (U/L)'
+
+conditions = [
+    df[col] == '< 48',
+    df[col] == '<48',
+    df[col] == '< 37',
+    df[col] == '> 1100',
+    df[col] == '>1100'
+]
+choices = [30, 30, 30, 1210, 1210]
+
+# Keep original score if none of the conditions match
+df[col] = np.select(conditions, choices, default=df[col])
+df[col] = pd.to_numeric(df[col], errors='coerce')
+df = df[df[col] > 20]
+```
+
+'PCR-US (mg/L)'
+```{python}
+col =  'PCR-US (mg/L)'
+voir_valeurs_problematiques(df,col)
+col_data = pd.to_numeric(df[col], errors='coerce')
+col_data.min()
+
+
+conditions = [
+    df[col] == '< 0,4'
+]
+choices = [0.35]
+
+# Keep original score if none of the conditions match
+df[col] = np.select(conditions, choices, default=df[col])
+df[col] = pd.to_numeric(df[col], errors='coerce')
+
+
+```
+
+
+```{python}
+df.to_csv('clean_data.csv')
+```
+
+
+3 - Ac anti-LDL oxydés (U/L)
+4 - Homa
+5 - PCR-US (mg/L)
+```{python}
+all_vars = keep_float + keep_easy_clean + ['Ac anti-LDL oxydés (U/L)','Homa','PCR-US (mg/L)'
+]
+```
+
+```{python}
+all_vars
+for col in all_vars:
+    print(df[col].dtype)
+    print(col)
+```
+
+```{python}
+```
+```{python}
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+colors = ['steelblue', 'orange', 'green', 'red', 'purple', 'grey', 'lightblue','pink']
+
+# Créer n subplots verticaux
+n = 8
+fig, axes = plt.subplots(n, 1, figsize=(10, 15), layout="tight")
+plt.subplots_adjust(hspace=0.6, top=0.75)
+fig.suptitle(f'Violin Plots - {n} variables quantitatives', fontsize=16, fontweight='bold')
+
+for i, (var, color) in enumerate(zip(all_vars, colors)):
+    mean_val = df[var].mean()
+    median_val = df[var].median()
+    q1 = df[var].quantile(0.25)
+    q3 = df[var].quantile(0.75)
+    
+    sns.violinplot(data=df, x=var, ax=axes[i], color=color, alpha=0.7)
+    axes[i].set_xlim(0, None)  # Force l'axe x à commencer à 0
+    # Si vous utilisez un violin plot horizontal :
+    sns.violinplot(data=df, x=var, ax=axes[i], color=color, alpha=0.7, cut=0)
+    axes[i].set_xlim(0, None)  # Force à commencer à 0
+
+    axes[i].set_title(f'{all_vars[i]}', fontsize=12, y=0.85)
+
+    
+    axes[i].set_xlabel('')
+    axes[i].grid(True, alpha=0.3)
+    
+    axes[i].text(s=round(median_val,1),
+                x=median_val,
+                y=0 + 0.1,
+                ha="center",
+                color="white",
+                weight="bold",
+                size=11)
+    
+    axes[i].text(s=round(q1,1),
+                x=q1,
+                y=0 - 0.05,
+                ha="center",
+                color="white",
+                weight="normal",
+                size=10)
+    
+    axes[i].text(s=round(q3,1),
+                x=q3,
+                y=0 - 0.05,
+                ha="center",
+                color="white",
+                weight="normal",
+                size=10)
+    # Remplacer la ligne d'annotation par :
+    axes[i].text(0.55, 0.75, f'Moyenne = {round(mean_val, 1)}', 
+            transform=axes[i].transAxes,
+            ha="right", va="top",
+            fontsize=10, fontweight='normal',
+            color='gray')
+    
+    axes[i].spines[["top","left","right"]].set_visible(False)
+    axes[i].set_yticklabels([])
+    axes[i].tick_params(length=0)
+
+# Label x seulement pour le dernier
+axes[-1].set_xlabel('Valeurs', fontsize=12)
+
+plt.tight_layout()
+plt.savefig('distribution.png')
+
+plt.show()
+```

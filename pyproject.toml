@@ -10,5 +10,6 @@ dependencies = [
     "papermill>=2.6.0",
     "pyfonts>=1.1.1",
     "pypalettes>=0.1.5",
+    "scikit-learn>=1.7.1",
     "seaborn>=0.13.2",
 ]
