@@ -1,0 +1,330 @@
+---
+title: "Peggy analysys"
+format: html
+---
+
+```{python}
+import os
+os.listdir()
+```
+
+```{python}
+import pandas as pd
+
+from datetime import datetime, timedelta
+```
+
+
+# 3 types de variables
+keep_float -> easy one no issue
+keep_easy_clean -> few values just remove <
+```{python}
+keep_float = ['Ferritine (µg/L)','LBP (µg/mL)','Vitamine D (ng/mL)']
+keep_easy_clean = ['Homocystéine (µmol/L)','TSH (mUI/L)']
+```
+
+
+```{python}
+import pandas as pd
+df = pd.read_csv('clean_data.csv')
+
+```
+```{python}
+all_vars = keep_float + keep_easy_clean + ['Ac anti-LDL oxydés (U/L)','Homa','PCR-US (mg/L)'
+]
+```
+
+```{python}
+all_vars
+for col in all_vars:
+    #print(df[col].dtype)
+    print(col)
+    print(df[col].min())
+    print(df[col].max())
+```
+
+
+```{python}
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+colors = ['steelblue', 'orange', 'green', 'red', 'purple', 'grey', 'lightblue','pink']
+
+# Créer n subplots verticaux
+n = 8
+fig, axes = plt.subplots(n, 1, figsize=(10, 15), layout="tight")
+plt.subplots_adjust(hspace=0.6, top=0.75)
+fig.suptitle(f'Violin Plots - {n} variables quantitatives', fontsize=16, fontweight='bold')
+
+for i, (var, color) in enumerate(zip(all_vars, colors)):
+    mean_val = df[var].mean()
+    median_val = df[var].median()
+    q1 = df[var].quantile(0.25)
+    q3 = df[var].quantile(0.75)
+    
+    sns.violinplot(data=df, x=var, ax=axes[i], color=color, alpha=0.7)
+    axes[i].set_xlim(0, None)  # Force l'axe x à commencer à 0
+    # Si vous utilisez un violin plot horizontal :
+    sns.violinplot(data=df, x=var, ax=axes[i], color=color, alpha=0.7, cut=0)
+    axes[i].set_xlim(0, None)  # Force à commencer à 0
+
+    axes[i].set_title(f'{all_vars[i]}', fontsize=12, y=0.85)
+
+    
+    axes[i].set_xlabel('')
+    axes[i].grid(True, alpha=0.3)
+    
+    axes[i].text(s=round(median_val,1),
+                x=median_val,
+                y=0 + 0.1,
+                ha="center",
+                color="white",
+                weight="bold",
+                size=11)
+    
+    axes[i].text(s=round(q1,1),
+                x=q1,
+                y=0 - 0.05,
+                ha="center",
+                color="white",
+                weight="normal",
+                size=10)
+    
+    axes[i].text(s=round(q3,1),
+                x=q3,
+                y=0 - 0.05,
+                ha="center",
+                color="white",
+                weight="normal",
+                size=10)
+    # Remplacer la ligne d'annotation par :
+    axes[i].text(0.55, 0.75, f'Moyenne = {round(mean_val, 1)}', 
+            transform=axes[i].transAxes,
+            ha="right", va="top",
+            fontsize=10, fontweight='normal',
+            color='gray')
+    
+    axes[i].spines[["top","left","right"]].set_visible(False)
+    axes[i].set_yticklabels([])
+    axes[i].tick_params(length=0)
+
+# Label x seulement pour le dernier
+axes[-1].set_xlabel('Valeurs', fontsize=12)
+
+plt.tight_layout()
+plt.savefig('distribution.png')
+
+plt.show()
+```
+
+
+```{python}
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Vos 5 variables (ajustez les noms selon vos colonnes)
+
+n = 8
+
+colors = ['steelblue', 'orange', 'green', 'red', 'purple', 'grey', 'lightblue','pink']
+
+
+# Créer 5 subplots verticaux
+fig, axes = plt.subplots(n, 1, figsize=(10, 15))
+fig.suptitle(f'Distribution des {n} variables quantitatives', fontsize=16, fontweight='bold')
+plt.subplots_adjust(hspace=0.6, top=0.90)
+
+# Créer un histogramme pour chaque variable
+for i, (ax, var) in enumerate(zip(axes, all_vars)):
+    ax.hist(df[var], bins=20, alpha=0.7, color=colors[i], edgecolor='white')
+    ax.set_title(f'Distribution de {var}', fontsize=12)
+    ax.set_ylabel('Fréquence')
+    ax.grid(True, alpha=0.3)
+    
+    # Ajouter des statistiques
+    mean_val = df[var].mean()
+    ax.axvline(mean_val, color='red', linestyle='--', alpha=0.8, label=f'Moyenne: {mean_val:.2f}')
+    ax.legend()
+plt.savefig(f'distribution_{datetime.now().strftime('%Y-%m-%d')}.png')
+
+```
+
+
+```{python}
+def calculate_descriptive_stats(df):
+    """
+    Calculate descriptive statistics for all numeric columns in a DataFrame
+    Returns: DataFrame with min, max, mean, Q1, Q3 for each column
+    """
+    # Select only numeric columns
+    numeric_df = df.select_dtypes(include=[np.number])
+    
+    # Calculate statistics
+    stats_dict = {
+        'Min': numeric_df.min(),
+        'Q1': numeric_df.quantile(0.25),
+        'Mediane' : numeric_df.median(),
+        'Mean': numeric_df.mean(),
+        'Q3': numeric_df.quantile(0.75),
+        'Max': numeric_df.max(),
+        'n' : numeric_df.count()
+    }
+    
+    # Create DataFrame with statistics
+    stats_df = pd.DataFrame(stats_dict)
+    
+    return stats_df
+
+```
+
+
+```{python}
+a =calculate_descriptive_stats(df)
+a = a.drop('Année')
+a.to_csv(f'Peggy_descriptive_data_{datetime.now().strftime('%Y-%m-%d')}.csv')
+```
+
+
+```{python}
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import pearsonr
+
+# Vos 5 variables
+variables = all_vars.copy()
+variables.remove('TSH (mUI/L)')
+n_vars = len(variables)
+
+# Créer la matrice de subplots
+fig, axes = plt.subplots(n_vars, n_vars, figsize=(15, 15))
+plt.subplots_adjust(hspace=0, wspace=0)  # Ajustez ces valeurs selon vos besoins
+
+fig.suptitle('Matrice de corrélation - Variables quantitatives', fontsize=16)
+
+for i in range(n_vars):
+    for j in range(n_vars):
+        ax = axes[i, j]
+        
+        if i == j:
+            data = df[variables[i]].dropna()
+            
+            # Créer l'histogramme
+            ax.hist(data, bins=20, alpha=0.7, color='steelblue')
+            ax.set_title(f'{variables[i]}', fontsize=10, fontweight='bold')
+            
+            # Calculer les statistiques
+            mean_val = data.mean()
+            median_val = data.median()
+            q1 = data.quantile(0.25)
+            q3 = data.quantile(0.75)
+            pos_x = 0.45
+            pos_y = 0.96
+            # Ajouter seulement les valeurs textuelles (sans lignes)
+            ax.text(pos_x, pos_y, f'Moyenne: {mean_val:.2f}', 
+                   transform=ax.transAxes, fontsize=9, 
+                   color='red', fontweight='bold', va='top')
+            
+            ax.text(pos_x, pos_y - 0.1, f'Médiane: {median_val:.2f}', 
+                   transform=ax.transAxes, fontsize=9, 
+                   color='blue', fontweight='bold', va='top')
+            
+            ax.text(pos_x, pos_y - 0.2, f'Q1: {q1:.2f}', 
+                   transform=ax.transAxes, fontsize=9, 
+                   color='orange', va='top')
+            
+            ax.text(pos_x, pos_y - 0.3, f'Q3: {q3:.2f}', 
+                   transform=ax.transAxes, fontsize=9, 
+                   color='orange', va='top')
+        elif i > j:
+            # Triangle inférieur: coefficients de corrélation et p-values
+            
+            # Calculer la corrélation et p-value
+            correlation, p_value = pearsonr(df[variables[j]], df[variables[i]])
+            
+            # Enlever tous les éléments visuels
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['bottom'].set_visible(False)
+            ax.spines['left'].set_visible(False)
+            
+            # Couleur selon la force de la corrélation
+            if abs(correlation) >= 0.7:
+                color = 'darkgreen'
+                weight = 'bold'
+            elif abs(correlation) >= 0.5:
+                color = 'orange'
+                weight = 'bold'
+            elif abs(correlation) >= 0.3:
+                color = 'red'
+                weight = 'normal'
+            else:
+                color = 'gray'
+                weight = 'normal'
+            
+            # Afficher le coefficient de corrélation
+            ax.text(0.5, 0.6, f'r = {correlation:.3f}', 
+                   ha='center', va='center', fontsize=12, 
+                   color=color, weight=weight, transform=ax.transAxes)
+            
+            # Afficher la p-value
+            if p_value < 0.001:
+                p_text = 'p < 0.001'
+            else:
+                p_text = f'p = {p_value:.3f}'
+                
+            ax.text(0.5, 0.4, p_text, 
+                   ha='center', va='center', fontsize=10, 
+                   color='black', transform=ax.transAxes)
+            
+            # Ajouter un fond coloré selon la significativité
+            if p_value < 0.05:
+                ax.set_facecolor('#f0f8ff')  # Bleu très clair pour significatif
+            else:
+                ax.set_facecolor("lightgrey")  # Rouge très clair pour non significatif
+                
+        else:
+            # Triangle supérieur: scatterplot (i < j)
+            correlation, p_value = pearsonr(df[variables[j]], df[variables[i]])
+
+            # Couleur selon la significativité
+            if p_value < 0.05:
+                scatter_color = 'steelblue'  # Bleu pour significatif
+                line_color = 'red'
+                alpha_scatter = 0.6
+                alpha_line = 0.8
+            else:
+                scatter_color = 'lightgray'  # Gris clair pour non significatif
+                line_color = 'gray'
+                alpha_scatter = 0.4
+                alpha_line = 0.5
+            
+            ax.scatter(df[variables[j]], df[variables[i]], 
+                      alpha=alpha_scatter, s=20, color=scatter_color)
+            
+            # Ajouter ligne de régression avec couleur conditionnelle
+            z = np.polyfit(df[variables[j]], df[variables[i]], 1)
+            p = np.poly1d(z)
+            ax.plot(df[variables[j]], p(df[variables[j]]), 
+                   color=line_color, linestyle='--', alpha=alpha_line)
+        
+        
+        # Labels seulement pour les bords
+        if i == n_vars - 1:  # Dernière ligne
+            ax.set_xlabel(variables[j], fontsize=10)
+        if j == 0:  # Première colonne
+            ax.set_ylabel(variables[i], fontsize=10)
+        
+        # Nettoyer les axes pour tous sauf le triangle inférieur
+        if not (i > j):
+            ax.tick_params(labelsize=8)
+
+plt.tight_layout()
+plt.savefig(f'matrice_chart_{datetime.now().strftime('%Y-%m-%d')}.png')
+
+plt.show()
+```
+
+

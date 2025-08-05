@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Peggy"
 format: html
 ---
 
@@ -10,7 +10,7 @@ os.listdir()
 
 ```{python}
 import pandas as pd
-df_raw = pd.read_csv('peggy/data/raw_peggy_DONNEES_ILP.csv')
+df_raw = pd.read_csv('raw_peggy_DONNEES_ILP.csv')
 
 # Afficher les premières lignes pour vérifier
 df_raw.head()
@@ -202,97 +202,59 @@ df[col] = pd.to_numeric(df[col], errors='coerce')
 
 
 ```{python}
-df.to_csv('clean_data.csv')
-```
-
-
-3 - Ac anti-LDL oxydés (U/L)
-4 - Homa
-5 - PCR-US (mg/L)
-```{python}
-all_vars = keep_float + keep_easy_clean + ['Ac anti-LDL oxydés (U/L)','Homa','PCR-US (mg/L)'
-]
-```
-
-```{python}
-all_vars
-for col in all_vars:
-    print(df[col].dtype)
-    print(col)
-```
-
-```{python}
-```
-```{python}
+import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+import squarify  # pip install squarify
 
 
-colors = ['steelblue', 'orange', 'green', 'red', 'purple', 'grey', 'lightblue','pink']
-
-# Créer n subplots verticaux
-n = 8
-fig, axes = plt.subplots(n, 1, figsize=(10, 15), layout="tight")
-plt.subplots_adjust(hspace=0.6, top=0.75)
-fig.suptitle(f'Violin Plots - {n} variables quantitatives', fontsize=16, fontweight='bold')
-
-for i, (var, color) in enumerate(zip(all_vars, colors)):
-    mean_val = df[var].mean()
-    median_val = df[var].median()
-    q1 = df[var].quantile(0.25)
-    q3 = df[var].quantile(0.75)
+# Method 1: Create bins for both variables and count observations
+def create_treemap_from_quantitative(df, var1, var2, bins1=5, bins2=5):
+    """
+    Create treemap from 2 quantitative variables by binning them
+    """
+    # Create bins for both variables
+    df_copy = df.copy()
+    df_copy[f'{var1}_bin'] = pd.cut(df_copy[var1], bins=bins1, precision=0)
+    df_copy[f'{var2}_bin'] = pd.cut(df_copy[var2], bins=bins2, precision=0)
     
-    sns.violinplot(data=df, x=var, ax=axes[i], color=color, alpha=0.7)
-    axes[i].set_xlim(0, None)  # Force l'axe x à commencer à 0
-    # Si vous utilisez un violin plot horizontal :
-    sns.violinplot(data=df, x=var, ax=axes[i], color=color, alpha=0.7, cut=0)
-    axes[i].set_xlim(0, None)  # Force à commencer à 0
-
-    axes[i].set_title(f'{all_vars[i]}', fontsize=12, y=0.85)
-
+    # Count observations in each combination
+    counts = df_copy.groupby([f'{var1}_bin', f'{var2}_bin']).size().reset_index(name='count')
     
-    axes[i].set_xlabel('')
-    axes[i].grid(True, alpha=0.3)
+    # Create labels combining both variables
+    counts['label'] = (counts[f'{var1}_bin'].astype(str) + '\n' + 
+                      counts[f'{var2}_bin'].astype(str) + '\n' + 
+                      'n=' + counts['count'].astype(str))
     
-    axes[i].text(s=round(median_val,1),
-                x=median_val,
-                y=0 + 0.1,
-                ha="center",
-                color="white",
-                weight="bold",
-                size=11)
+    # Remove empty bins
+    counts = counts[counts['count'] > 0]
     
-    axes[i].text(s=round(q1,1),
-                x=q1,
-                y=0 - 0.05,
-                ha="center",
-                color="white",
-                weight="normal",
-                size=10)
-    
-    axes[i].text(s=round(q3,1),
-                x=q3,
-                y=0 - 0.05,
-                ha="center",
-                color="white",
-                weight="normal",
-                size=10)
-    # Remplacer la ligne d'annotation par :
-    axes[i].text(0.55, 0.75, f'Moyenne = {round(mean_val, 1)}', 
-            transform=axes[i].transAxes,
-            ha="right", va="top",
-            fontsize=10, fontweight='normal',
-            color='gray')
-    
-    axes[i].spines[["top","left","right"]].set_visible(False)
-    axes[i].set_yticklabels([])
-    axes[i].tick_params(length=0)
+    return counts
+```
 
-# Label x seulement pour le dernier
-axes[-1].set_xlabel('Valeurs', fontsize=12)
+```{python}
+# Vos 5 variables
+variables = [
+ 'LBP (µg/mL)',
+ 'Homa']
+# Create treemap data
+treemap_data = create_treemap_from_quantitative(df,  'LBP (µg/mL)', 'Homa', bins1=15, bins2=15)
+treemap_data
+treemap_data.to_csv(f'find_rules_{datetime.now().strftime('%Y-%m-%d')}.csv')
+```
+```{python}
 
-plt.tight_layout()
-plt.savefig('distribution.png')
 
-plt.show()
+condition = (df['LBP (µg/mL)'] >= 11) &  (df['Homa'] < 8)
+
+df_filter = df[~condition]
+df = df_filter.copy()
+df.shape
+```
+
+
+```{python}
+df.to_csv(f'clean_data_{datetime.now().strftime('%Y-%m-%d')}.csv')
+df.to_csv(f'clean_data.csv')
+
 ```
