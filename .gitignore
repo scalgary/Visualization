@@ -10,3 +10,5 @@ renv/python/
 renv/stating/
 .venv/
 peggy/data/*.png
+cer*.csv
+canada*.csv
