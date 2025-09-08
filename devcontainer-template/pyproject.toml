@@ -1,0 +1,16 @@
+[project]
+name = "visualization"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "jupyter>=1.1.1",
+    "matplotlib>=3.10.3",
+    "numpy>=2.3.1",
+    "pandas>=2.3.0",
+    "papermill>=2.6.0",
+    "pyfonts>=1.1.1",
+    "pypalettes>=0.1.5",
+    "scikit-learn>=1.7.1",
+    "seaborn>=0.13.2",
+    "squarify>=0.4.4",
+]
